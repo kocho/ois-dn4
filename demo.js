@@ -5,6 +5,8 @@ var queryUrl = baseUrl + '/query';
 var username = "ois.seminar";
 var password = "ois4fri";
 
+var ehrIDs = [ ];
+
 function getSessionId() {
     var response = $.ajax({
         type: "POST",
@@ -13,6 +15,58 @@ function getSessionId() {
         async: false
     });
     return response.responseJSON.sessionId;
+}
+
+function runCreateUsers() {
+	sessionId = getSessionId();
+
+	$.when(createTestUsers("janez", "novak", "1938-10-11T14:58"), createTestUsers("marko", "testni", "1993-11-30T11:11"), createTestUsers("jure", "medved", "1993-07-22T15:26")).done(function(){
+		addVitalSignstoTestUsers(ehrIDs[0], "2014-12-19T12:20Z", 183, 85, 36.55, 122, 95, 100, "test");
+		addVitalSignstoTestUsers(ehrIDs[1], "2014-10-22T22:30Z", 190, 90, 37.55, 115, 90, 95, "test2");
+		addVitalSignstoTestUsers(ehrIDs[2], "2014-11-05T15:12Z", 175, 65, 36.20, 115, 90, 105, "test4");
+	});
+}
+
+function createTestUsers(ime, priimek, datumRojstva) {
+	sessionId = getSessionId();
+
+	$.ajaxSetup({
+		headers: {"Ehr-Session": sessionId}
+	});
+	$.ajax({
+		url: baseUrl + "/ehr",
+		type: 'POST',
+		async: false,
+		success: function (data) {
+			var ehrId = data.ehrId;
+			var partyData = {
+				firstNames: ime,
+				lastNames: priimek,
+				dateOfBirth: datumRojstva,
+				partyAdditionalInfo: [{key: "ehrId", value: ehrId}]
+			};
+			return $.ajax({
+				url: baseUrl + "/demographics/party",
+				type: 'POST',
+				async: false,
+				contentType: 'application/json',
+				data: JSON.stringify(partyData),
+				success: function (party) {
+					if (party.action == 'CREATE') {
+						$("#kreirajSporocilo").html("<span class='obvestilo label label-success fade-in'>Uspešno kreirani EHR zapisi</span>");
+						//console.log("Uspešno kreiran EHR zapis " + ehrId + "'.");
+						ehrIDs[ehrIDs.length] = ehrId;
+						console.log(ehrIDs[ehrIDs.length-1]);
+					}
+				},
+				error: function(err) {
+					//$("#kreirajSporocilo").html("<span class='obvestilo label label-danger fade-in'>Napaka '" + JSON.parse(err.responseText).userMessage + "'!");
+					console.log(JSON.parse(err.responseText).userMessage);
+				}
+			});
+		}
+	});
+
 }
 
 
@@ -47,9 +101,14 @@ function kreirajEHRzaBolnika() {
 		            data: JSON.stringify(partyData),
 		            success: function (party) {
 		                if (party.action == 'CREATE') {
-		                    $("#kreirajSporocilo").html("<span class='obvestilo label label-success fade-in'>Uspešno kreiran EHR '" + ehrId + "'.</span>");
+		                    $("#kreirajSporocilo").html("<span class='obvestilo label label-success fade-in'>Uspešno kreirani EHR '" + ehrId + "'.</span>");
 		                    console.log("Uspešno kreiran EHR '" + ehrId + "'.");
 		                    $("#preberiEHRid").val(ehrId);
+							ehrIDs.push($("#preberiEHRid").val(ehrId));
+							//$('#prikaziIbranegaBolnika').append('<option value="janez,novak,1938-10-11T14:58">Janez Novak</option>');
+							//$('#prikaziIbranegaBolnika').html('<option value="janez,novak,1938-10-11T14:58">Janez Novak</option>');
+							//$('#prikaziIbranegaBolnika').selec('refresh');
+
 		                }
 		            },
 		            error: function(err) {
@@ -61,6 +120,7 @@ function kreirajEHRzaBolnika() {
 		});
 	}
 }
+
 
 
 function preberiEHRodBolnika() {
@@ -88,6 +148,49 @@ function preberiEHRodBolnika() {
 	}	
 }
 
+function addVitalSignstoTestUsers (ehrID, ura, telVis, telTez, telTemp, sisTlak, diaTlak, oVKrvi, mer) {
+	sessionId = getSessionId();
+
+	console.log("ehr ID: " + ehrID);
+
+	$.ajaxSetup({
+		headers: {"Ehr-Session": sessionId}
+	});
+	var data = {
+		"ctx/language": "en",
+		"ctx/territory": "SI",
+		"ctx/time": ura,
+		"vital_signs/height_length/any_event/body_height_length": telVis,
+		"vital_signs/body_weight/any_event/body_weight": telTez,
+		"vital_signs/body_temperature/any_event/temperature|magnitude": telTemp,
+		"vital_signs/body_temperature/any_event/temperature|unit": "°C",
+		"vital_signs/blood_pressure/any_event/systolic": sisTlak,
+		"vital_signs/blood_pressure/any_event/diastolic": diaTlak,
+		"vital_signs/indirect_oximetry:0/spo2|numerator": oVKrvi
+	};
+	var param = {
+		"ehrId": ehrID,
+		templateId: 'Vital Signs',
+		format: 'FLAT',
+		committer: mer
+	};
+	$.ajax({
+		url: baseUrl + "/composition?" + $.param(param),
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify(data),
+		success: function (res) {
+			console.log(res.meta.href);
+			$("#dodajMeritveVitalnihZnakovSporocilo").html("<span class='obvestilo label label-success fade-in'>" + res.meta.href + ".</span>");
+		},
+		error: function(err) {
+			$("#dodajMeritveVitalnihZnakovSporocilo").html("<span class='obvestilo label label-danger fade-in'>Napaka '" + JSON.parse(err.responseText).userMessage + "'!");
+			console.log(JSON.parse(err.responseText).userMessage);
+		}
+	});
+
+
+}
 
 function dodajMeritveVitalnihZnakov() {
 	sessionId = getSessionId();
@@ -144,11 +247,27 @@ function dodajMeritveVitalnihZnakov() {
 	}
 }
 
+function showResults() {
+	sessionId = getSessionId();
+	id = $("#prikaziIbranegaBolnika").val();
+	if(id == -1)
+		$("#noticePrikaziBolnika").html("<span class='obvestiloBolnik label label-warning fade-in'> Izberi bolnika!");
+	else {
+		var ehrId = ehrIDs[id];
+		console.log("id: " + id + " klic showResults ehrId: " + ehrId);
+		if(!ehrId) {
+			$("#noticePrikaziBolnika").html("<span class='obvestiloBolnik label label-warning fade-in'> Dodaj testne uporabnike!");
+		} else {
+			$("#noticePrikaziBolnika").html("<span class='obvestiloBolnik label label-success fade-in'> Bolnik najden");
+		}
+	}
+
+}
 
 function preberiMeritveVitalnihZnakov() {
 	sessionId = getSessionId();	
 
-	var ehrId = $("#meritveVitalnihZnakovEHRid").val();
+	var ehrId = ehrIDs[$("#meritveVitalnihZnakovEHRid").val()];
 	var tip = $("#preberiTipZaVitalneZnake").val();
 
 	if (!ehrId || ehrId.trim().length == 0 || !tip || tip.trim().length == 0) {
@@ -248,7 +367,6 @@ function preberiMeritveVitalnihZnakov() {
 		});
 	}
 }
-
 
 $(document).ready(function() {
 	$('#preberiObstojeciEHR').change(function() {

@@ -8,21 +8,71 @@
      <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet">
      <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
      <script src="demo.js"></script>
-     <style>
+
+
+    <style>
      body {padding: 10px;}
      .btn {margin-top: 10px;}
      .obvestilo {margin-left:10px;}
      </style>
      </head>
  <body>
- <div class="page-header"><h2>Vnos in poizvedovanje po EHR podatkih <small>EhrScape platforma</small></h2></div>
+ <div class="page-header"><h2 align="center">OIS-DN4</h2></div>
+ <div class = "row">
+     <div class="col-lg-6 col-md-6 col-sm-6">
+     <div class="panel panel-default">
+     <div class="panel-heading">
+     <div class="row">
+     <div class="col-lg-12 col-md-12 col-sm-12" align="center"><b>Dodaj testne uporabnike</b></div>
+     </div>
+     </div>
+     <div class="panel-body">
+     <button type="button" class="btn btn-primary btn-xs btn-block" onclick="runCreateUsers()">Dodaj testne uporabnike!</button>
+     <span id="kreirajSporocilo"></span>
+     </div>
+     </div>
+     </div>
+
+     <div class="col-lg-6 col-md-6 col-sm-6">
+     <div class="panel panel-default">
+     <div class="panel-heading">
+     <div class="row">
+     <div class="col-lg-12 col-md-12 col-sm-12" align="center"><b>Izberi bolnika</b></div>
+     </div>
+     </div>
+     <div class="panel-body">
+     <div class="input-group">
+     <select class="form-control input-sm" id="prikaziIbranegaBolnika"><option value=-1></option><option value=0>Janez Novak</option><option value=1>Marko Testni</option><option value=2>Jure Medved</option></select>
+     <button type="button" class="btn btn-info btn-sm" onclick="showResults()" >Prikazi podatke bolnika</button>
+     </div>
+         <span id="noticePrikaziBolnika"></span>
+     </div>
+     </div>
+     </div>
+     </div>
+
+ </div>
+<div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <div class="panel-title">Informacije o bolniku</div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="informacijeObolniku"></div>
+        </div>
+    </div>
+
+</div>
  <div class="row">
      <div class="col-lg-6 col-md-6 col-sm-6">
      <div class="panel panel-default">
      <div class="panel-heading">
      <div class="row">
+     <div class="panel-body">
      <div class="col-lg-8 col-md-8 col-sm-8"><b>Kreiraj EHR zapis</b> za novega bolnika</div>
-     <div class="col-lg-4 col-md-4 col-sm-4"><select class="form-control input-sm" id="preberiPredlogoBolnika"><option value=""></option><option value="Pujsa,Pepa,1938-10-30T14:58">Pujsa Pepa</option></select></div>
+     <div class="col-lg-4 col-md-4 col-sm-4"><select class="form-control input-sm" id="preberiPredlogoBolnika"><option value=""></option><option value="Pujsa,Pepa,1938-10-30T14:58">Pujsa Pepa</option></select></div></div>
      </div>
      </div>
      <div class="panel-body">
@@ -77,7 +127,7 @@
      <div class="row">
      <div class="col-lg-6 col-md-6 col-sm-6"><b>Pregled</b> meritev <b>vitalnih znakov</b> bolnika</div>
      <div class="col-lg-3 col-md-3 col-sm-3"><select class="form-control input-sm" id="preberiTipZaVitalneZnake"><option value="telesna temperatura">telesna temperatura</option><option value="telesna temperatura AQL">telesna temperatura (filter na podhladitev)</option><option value="telesna teža">telesna teža</option></select></div>
-     <div class="col-lg-3 col-md-3 col-sm-3"><select class="form-control input-sm" id="preberiEhrIdZaVitalneZnake"><option value=""></option><option value="b931580f-2b05-488b-985b-8d9ffb08ad02">Ata Smrk</option><option value="d564c6a3-5a43-4fcc-bfa7-9ac76e9673bd">Pujsa Pepa</option></select></div>
+     <div class="col-lg-3 col-md-3 col-sm-3"><select class="form-control input-sm" id="preberiEhrIdZaVitalneZnake"><option value=""></option><option value=0>Janez Novak</option><option value=1>Marko Testni</option><option value=2>Jure Medved</option></select></div>
      </div>
      </div>
      <div class="panel-body">
