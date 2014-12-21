@@ -1,0 +1,29 @@
+{
+    "pulse":[
+    "low":60,
+    "high":"100"
+    ],
+
+    "bPressureSys":[
+        "low": 90,
+        "high": 140
+    ],
+
+    "bPressureDia":[
+        "low": 60,
+        "high": 90
+    ],
+
+    "bmi":[
+        "underweight":18.5,
+        "normalMax":24.9,
+        "overweightMax": 29.9
+    ],
+    "bodyTemp":[
+        "low": 35,
+        "high": 38
+    ],
+    "o2vKrvi":[
+        "danger": 85
+    ]
+}
