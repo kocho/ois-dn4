@@ -1,29 +1,31 @@
 {
-    "pulse":[
+    "pulse":{
+
+
     "low":60,
     "high":"100"
-    ],
+    },
 
-    "bPressureSys":[
+    "bPressureSys":{
         "low": 90,
         "high": 140
-    ],
+        },
 
-    "bPressureDia":[
+    "bPressureDia": {
         "low": 60,
         "high": 90
-    ],
+    },
 
-    "bmi":[
+    "bmi":{
         "underweight":18.5,
         "normalMax":24.9,
         "overweightMax": 29.9
-    ],
-    "bodyTemp":[
+        },
+    "bodyTemp":{
         "low": 35,
         "high": 38
-    ],
-    "o2vKrvi":[
+        },
+    "o2vKrvi":{
         "danger": 85
-    ]
+        }
 }
