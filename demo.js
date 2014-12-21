@@ -5,6 +5,8 @@ var queryUrl = baseUrl + '/query';
 var username = "ois.seminar";
 var password = "ois4fri";
 
+var graphData = [ ];
+
 var ehrIDs = [ ];
 
 function getSessionId() {
@@ -24,7 +26,102 @@ function runCreateUsers() {
 		addVitalSignstoTestUsers(ehrIDs[0], "2014-12-19T12:20Z", 183, 85, 36.55, 122, 95, 100, "test");
 		addVitalSignstoTestUsers(ehrIDs[1], "2014-10-22T22:30Z", 190, 90, 37.55, 115, 90, 95, "test2");
 		addVitalSignstoTestUsers(ehrIDs[2], "2014-11-05T15:12Z", 175, 65, 36.20, 115, 90, 105, "test4");
+		for(i=0; i<3; i++) {
+			for(j=0; j<7; j++) {
+				switch (i) {
+					case 0:
+						weight = (Math.random() * 10 + 78).toFixed(1);
+						addWeight(ehrIDs[i], weight);
+						break;
+					case 1:
+						weight = (Math.random() * 11 + 85).toFixed(1);
+						addWeight(ehrIDs[i], weight);
+						break;
+					case 2:
+						weight = (Math.random() * 12 + 60).toFixed(1);
+						addWeight(ehrIDs[i], weight);
+						break;
+				}
+			}
+		}
 	});
+
+	//createGraph();
+
+}
+
+function createGraph() {
+	var margin = {top: 40, right: 20, bottom: 30, left: 40},
+		width = screen.width/2 - 60 - margin.left - margin.right,
+		height = 500 - margin.top - margin.bottom;
+
+	var x = d3.scale.ordinal()
+		.rangeRoundBands([0, width], .1);
+
+	var y = d3.scale.linear()
+		.range([height, 0]);
+		//.range([0, 100])
+
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom");
+
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left")
+		//.range([0, 100])
+		//.tickFormat(formatPercent);
+
+	var tip = d3.tip()
+		.attr('class', 'd3-tip')
+		.offset([-10, 0])
+		.html(function(d) {
+			return "<strong>Teza:</strong> <span style='color:Green'>" + d.frequency + "</span>";
+		})
+
+	var svg = d3.select("#graphWeight").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	svg.call(tip);
+
+		x.domain(graphData.map(function(d) { return d.letter; }));
+		y.domain([0, d3.max(graphData, function(d) { return d.frequency; })]);
+
+		svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + height + ")")
+			.call(xAxis);
+
+		svg.append("g")
+			.attr("class", "y axis")
+			.call(yAxis)
+			.append("text")
+			//.attr("transform", "rotate(-90)")
+			.attr("y", -20)
+			.attr("dy", ".71em")
+			//.style("text-anchor", "end")
+			.text("Teza");
+
+		svg.selectAll(".bar")
+			.data(graphData)
+			.enter().append("rect")
+			.attr("class", "bar")
+			.attr("x", function(d) { return x(d.letter); })
+			.attr("width", x.rangeBand())
+			.attr("y", function(d) { return y(d.frequency); })
+			.attr("height", function(d) { return height - y(d.frequency); })
+			.on('mouseover', tip.show)
+			.on('mouseout', tip.hide)
+
+
+
+	function type(d) {
+		d.frequency = +d.frequency;
+		return d;
+	}
 }
 
 function createTestUsers(ime, priimek, datumRojstva) {
@@ -68,7 +165,6 @@ function createTestUsers(ime, priimek, datumRojstva) {
 	});
 
 }
-
 
 function kreirajEHRzaBolnika() {
 	sessionId = getSessionId();
@@ -120,8 +216,6 @@ function kreirajEHRzaBolnika() {
 		});
 	}
 }
-
-
 
 function preberiEHRodBolnika() {
 	sessionId = getSessionId();
@@ -192,6 +286,42 @@ function addVitalSignstoTestUsers (ehrID, ura, telVis, telTez, telTemp, sisTlak,
 
 }
 
+function addWeight(ehrID, telTeza){
+	sessionId = getSessionId();
+
+	console.log("add weight for: " + ehrID );
+
+	$.ajaxSetup({
+		headers: {"Ehr-Session": sessionId}
+	});
+	var data = {
+		"ctx/language": "en",
+		"ctx/territory": "SI",
+		"ctx/time": "2014-11-21T11:40Z",
+		"vital_signs/body_weight/any_event/body_weight": telTeza
+	};
+	var param = {
+		"ehrId": ehrID,
+		templateId: 'Vital Signs',
+		format: 'FLAT',
+		committer: "janez"
+	};
+	$.ajax({
+		url: baseUrl + "/composition?" + $.param(param),
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify(data),
+		success: function (res) {
+			console.log("added weith for : " + ehrID + " teza: " + telTeza);
+			//$("#dodajMeritveVitalnihZnakovSporocilo").html("<span class='obvestilo label label-success fade-in'>" + res.meta.href + ".</span>");
+		},
+		error: function(err) {
+			//$("#dodajMeritveVitalnihZnakovSporocilo").html("<span class='obvestilo label label-danger fade-in'>Napaka '" + JSON.parse(err.responseText).userMessage + "'!");
+			console.log(JSON.parse(err.responseText).userMessage);
+		}
+	});
+}
+
 function dodajMeritveVitalnihZnakov() {
 	sessionId = getSessionId();
 
@@ -249,7 +379,9 @@ function dodajMeritveVitalnihZnakov() {
 
 function showResults() {
 	sessionId = getSessionId();
+
 	id = $("#prikaziIbranegaBolnika").val();
+
 	if(id == -1)
 		$("#noticePrikaziBolnika").html("<span class='obvestiloBolnik label label-warning fade-in'> Izberi bolnika!");
 	else {
@@ -259,9 +391,44 @@ function showResults() {
 			$("#noticePrikaziBolnika").html("<span class='obvestiloBolnik label label-warning fade-in'> Dodaj testne uporabnike!");
 		} else {
 			$("#noticePrikaziBolnika").html("<span class='obvestiloBolnik label label-success fade-in'> Bolnik najden");
+
+			var jqXHR = $.ajax({
+				url: baseUrl + "/demographics/ehr/" + ehrId + "/party",
+				type: 'GET',
+				headers: {"Ehr-Session": sessionId},
+				success: function(data) {
+					var parti = data.party;
+					$("#informacijeObolniku").html("<span>Bolnik: <b>" + parti.firstNames + " " + parti.lastNames + "</b></span>");
+
+					$.ajax({
+						url: baseUrl + "/view/" + ehrId + "/" + "weight",
+						type: 'GET',
+						headers: {"Ehr-Session": sessionId},
+						async: false,
+						success: function(res) {
+							if (res.length > 0) {
+								for (i = 0; i<res.length; i++) {
+									var teza = {letter: i+1, frequency: res[i].weight};
+									graphData[i] = teza;
+									console.log(graphData[i].letter + " " + graphData[i].frequency);
+								}
+							}
+						}
+					})
+				}
+
+
+			})
+
+
+
 		}
+
 	}
 
+	jqXHR.done(function(){
+		createGraph();
+	});
 }
 
 function preberiMeritveVitalnihZnakov() {
